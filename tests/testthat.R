@@ -1,4 +1,4 @@
 library(testthat)
-library(EmptyPackage)
+library(OmopOnDuckDB)
 
-test_check("EmptyPackage")
+test_check("OmopOnDuckDB")

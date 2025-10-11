@@ -1,4 +1,4 @@
-Package: EmptyPackage
+Package: OmopOnDuckDB
 Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
@@ -12,5 +12,5 @@ LazyData: true
 RoxygenNote: 7.2.1
 Suggests: 
     testthat
-URL: https://oxford-pharmacoepi.github.io/EmptyPackage/
-BugReports: https://github.com/oxford-pharmacoepi/EmptyPackage/issues
+URL: https://OHDSI.github.io/OmopOnDuckDB/
+BugReports: https://github.com/OHDSI/OmopOnDuckDB/issues
