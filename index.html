@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>What the Package Does (Title Case) • EmptyPackage</title>
+<title>What the Package Does (Title Case) • OmopOnDuckDB</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -20,7 +20,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="index.html">EmptyPackage</a>
+    <a class="navbar-brand me-2" href="index.html">OmopOnDuckDB</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
@@ -37,7 +37,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/oxford-pharmacoepi/EmptyPackage/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/OmopOnDuckDB/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -46,50 +46,32 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="emptypackagetemplate">EmptyPackageTemplate<a class="anchor" aria-label="anchor" href="#emptypackagetemplate"></a>
+<div class="page-header"><h1 id="omoponduckdb">OmopOnDuckDB<a class="anchor" aria-label="anchor" href="#omoponduckdb"></a>
 </h1></div>
-<p>This template empty package is meant to be used to create new R packages.</p>
+<!-- badges: start -->
+
+<p>The goal of <strong>OmopOnDuckDB</strong> is to … <em>clearly state the main goal of the package</em></p>
 <div class="section level2">
-<h2 id="instructions">Instructions<a class="anchor" aria-label="anchor" href="#instructions"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Create a new repository using:</p>
-<p><em>Use this template</em> &gt; <em>Create a new repository</em> &gt; Choose the name of your rep and click <em>Create repository</em></p>
-<p><img src="./extras/new_repo.png"></p>
-<blockquote>
-<p>Note that once created some actions will be triggered to change the name of your package from ‘EmptyPackage’ to the name of the repository that you created.</p>
-</blockquote>
-<blockquote>
-<p>Note you will need to create a <strong>public</strong> repository so actions work properly as expected.</p>
-</blockquote>
+<p>You can install the development version of OmopOnDuckDB from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"OHDSI/OmopOnDuckDB"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="content">Content<a class="anchor" aria-label="anchor" href="#content"></a>
+<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
-<p>The package contain:</p>
-<ul>
-<li>
-<a href="./R">R</a> single <code><a href="reference/hello.html">hello()</a></code> function.</li>
-<li>
-<a href="./tests">tests</a> framework to test via testthat and a simple test for the <code><a href="reference/hello.html">hello()</a></code> function.</li>
-<li>
-<a href="./.github">.github</a> the github actions that contain: automatic checks, deployment of package website.</li>
-<li>
-<a href="./_pkgdown.yml">_pkgdown.yml</a> to edit the package website.</li>
-<li>
-<a href="./extras">extras</a> some useful scripts to maintain the package.</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="book">Book<a class="anchor" aria-label="anchor" href="#book"></a>
-</h2>
-<p>This template has been built as part of the book: <a href="https://oxford-pharmacoepi.github.io/Tidy-R-packages-with-OMOP/" class="external-link"><strong>Tidy R packages with the OMOP CDM</strong></a>.</p>
+<p>This is a basic example which shows you how to solve a common problem:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://OHDSI.github.io/OmopOnDuckDB/">OmopOnDuckDB</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/oxford-pharmacoepi/EmptyPackage/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/oxford-pharmacoepi/EmptyPackage/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/OHDSI/OmopOnDuckDB/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/OHDSI/OmopOnDuckDB/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -105,7 +87,7 @@
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing EmptyPackage</a></li>
+<li><a href="authors.html#citation">Citing OmopOnDuckDB</a></li>
 </ul>
 </div>
 
@@ -116,7 +98,13 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://CRAN.R-project.org/package=OmopOnDuckDB" class="external-link"><img src="https://www.r-pkg.org/badges/version/OmopOnDuckDB" alt="CRAN status"></a></li>
+<li><a href="https://github.com/OHDSI/OmopOnDuckDB/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/OHDSI/OmopOnDuckDB/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
@@ -127,7 +115,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
