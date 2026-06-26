@@ -176,7 +176,7 @@ insertCdmTo.duckdb_cdm <- function(cdm , to) {
 #' @export
 dropSourceTable.duckdb_cdm <- function(cdm, name) {
   for (nm in name) {
-    statement <- paste0("DROP TABLE IF EXISTS ", fullName(src = cdm, name = name))
+    statement <- paste0("DROP TABLE IF EXISTS ", fullNameChar(src = cdm, name = name))
     DBI::dbExecute(conn = con, statement = statement)
   }
 }
@@ -205,7 +205,10 @@ cdmTableFromSource.duckdb_cdm <- function(src, value) {
 
 }
 
-fullName <- function(src, name) {
+fullNameId <- function(src, name) {
+  DBI::Id(schema = src$writeSchema, table = paste0(src$writePrefix, name))
+}
+fullNameChar <- function(src, name) {
   paste0(src$writeSchema, ".", src$writePrefix, name)
 }
 listTablesSrc <- function(src) {
@@ -228,16 +231,16 @@ listTables <- function(con, schema, prefix = "") {
 readTableSrc <- function(src, name) {
   readTable(
     con = src$con,
-    name = fullName(src = src, name = name)
+    name = fullNameId(src = src, name = name)
   ) |>
     omopgenerics::newCdmTable(src = src, name = name)
 }
 readTable <- function(con, name) {
-  dplyr::tbl(con, I(name)) |>
+  dplyr::tbl(con, name) |>
     dplyr::rename_all(tolower)
 }
 writeTableSrc <- function(src, name, value) {
-  name <- fullName(src = src, name = name)
+  name <- fullNameId(src = src, name = name)
   writeTable(con = src$con, name = name, value = value)
 }
 writeTable <- function(con, name, value) {
