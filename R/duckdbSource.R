@@ -126,13 +126,121 @@ tbl.duckdb_cdm <- function(src, schema = NULL, name, ...) {
     dplyr::rename_all(tolower) |>
     omopgenerics::newCdmTable(src = src, name = name)
 }
-compute
-summary
-insertTable
-insertCdmTo
-dropSourceTable
-readSourceTable
-listSourceTables
-cdmDisconnect
-cdmTableFromSource
 
+#' @importFrom dplyr compute
+#' @export
+compute.duckdb_cdm <- function(x, name, temporary = FALSE, overwrite = TRUE, ...) {
+  src <- attr(x, "tbl_source")
+
+  # check if need intermediate
+  if (intermediate) {
+    nm <- omopgenerics::uniqueTableName()
+    x <- x |>
+      dplyr::compute(name = nm)
+    on.exit(omopgenerics::dropSourceTable(cdm = x, name = nm))
+  }
+
+  if (!temporary) {
+    # check if we need to drop old table
+  }
+
+
+}
+
+#' @export
+summary.duckdb_cdm <- function(object, ...) {
+  list(
+    package = "OmopOnDuckDB",
+    databasePath = duckdb::dbGetInfo(object$con)$dbname,
+    writeSchema = object$writeSchema,
+    writePrefix = object$writePrefix
+  )
+}
+
+#' @importFrom omopgenerics insertTable
+#' @export
+insertTable.duckdb_cdm <- function(cdm, table, name, ...) {
+  if (name %in% listTablesSrc(src = cdm)) {
+    dropSourceTable(cdm = cdm, name = name)
+  }
+  writeTableSrc(src = cdm, name = name, value = table)
+}
+
+#' @importFrom omopgenerics insertCdmTo
+#' @export
+insertCdmTo.duckdb_cdm <- function(cdm , to) {
+
+}
+
+#' @importFrom omopgenerics dropSourceTable
+#' @export
+dropSourceTable.duckdb_cdm <- function(cdm, name) {
+  for (nm in name) {
+    statement <- paste0("DROP TABLE IF EXISTS ", fullName(src = cdm, name = name))
+    DBI::dbExecute(conn = con, statement = statement)
+  }
+}
+
+#' @importFrom omopgenerics readSourceTable
+#' @export
+readSourceTable.duckdb_cdm <- function(cdm, name) {
+  readTableSrc(src = cdm, name = name)
+}
+
+#' @importFrom omopgenerics listSourceTables
+#' @export
+listSourceTables.duckdb_cdm <- function(cdm) {
+  listTablesSrc(src = cdm)
+}
+
+#' @importFrom omopgenerics cdmDisconnect
+#' @export
+cdmDisconnect.duckdb_cdm <- function(cdm) {
+  duckdb::dbDisconnect(conn = cdm$con)
+}
+
+#' @importFrom omopgenerics cdmTableFromSource
+#' @export
+cdmTableFromSource.duckdb_cdm <- function(src, value) {
+
+}
+
+fullName <- function(src, name) {
+  paste0(src$writeSchema, ".", src$writePrefix, name)
+}
+listTablesSrc <- function(src) {
+  listTables(
+    con = src$con,
+    schema = src$writeSchema,
+    prefix = src$writePrefix
+  )
+}
+listTables <- function(con, schema, prefix = "") {
+  tables <- dplyr::tbl(con, I("information_schema.tables")) |>
+    dplyr::filter(.data$table_schema %in% .env$schema) |>
+    dplyr::pull("table_name")
+  if (!identical(prefix, "")) {
+    tables <- tables[startsWith(x = tables, prefix = prefix)] |>
+      stringr::str_replace(pattern = paste0("^", prefix), replacement = "")
+  }
+  return(tables)
+}
+readTableSrc <- function(src, name) {
+  readTable(
+    con = src$con,
+    name = fullName(src = src, name = name)
+  ) |>
+    omopgenerics::newCdmTable(src = src, name = name)
+}
+readTable <- function(con, name) {
+  dplyr::tbl(con, I(name)) |>
+    dplyr::rename_all(tolower)
+}
+writeTableSrc <- function(src, name, value) {
+  name <- fullName(src = src, name = name)
+  writeTable(con = src$con, name = name, value = value)
+}
+writeTable <- function(con, name, value) {
+  DBI::dbWriteTable(conn = con, name = name, value = value)
+  readTable(con = con, name = name)
+}
