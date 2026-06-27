@@ -142,15 +142,14 @@ compute.duckdb_cdm <- function(x, name, temporary = FALSE, overwrite = TRUE, ...
   src <- attr(x, "tbl_source")
 
   # get the query
-  query <- dbplyr::sql_render(query = x, con = src$con)
+  query <- as.character(dbplyr::sql_render(query = x, con = src$con))
 
   if (!temporary) {
     # prepare name
     name <- paste0(src$writeSchema, ".", src$writePrefix, name)
 
     # check if need intermediate table
-    queryCharacter <- as.character(query)
-    if (grepl(pattern = name, x = queryCharacter)) {
+    if (grepl(pattern = name, x = query)) {
       nm <- omopgenerics::uniqueTableName()
       x <- x |>
         dplyr::compute(name = nm)
@@ -164,7 +163,7 @@ compute.duckdb_cdm <- function(x, name, temporary = FALSE, overwrite = TRUE, ...
     createSql <- "CREATE TEMPORARY TABLE "
   }
 
-  sql <- dbplyr::build_sql(createSql, name, " AS ", query, con = src$con)
+  sql <- dbplyr::build_sql(paste0(createSql, name, " AS ", query), con = src$con)
   DBI::dbExecute(conn = src$con, statement = sql)
   readTableSrc(src = src, name = name)
 }
@@ -205,12 +204,12 @@ insertCdmTo.duckdb_cdm <- function(cdm , to) {
     if (!any(c("achilles_table", "omop_table", "cohort_table") %in% cl)) {
       other <- c(other, nm)
     }
-    insertTable(cdm = to, name = nm, table = x, overwrite = TRUE)
+    insertTable(cdm = to, name = nm, table = x)
     if ("cohort_table" %in% cl) {
       cohorts <- c(cohorts, nm)
-      insertTable(cdm = to, name = paste0(nm, "_set"), table = attr(x, "cohort_set"), overwrite = TRUE)
-      insertTable(cdm = to, name = paste0(nm, "_attrition"), table = attr(x, "cohort_attrition"), overwrite = TRUE)
-      insertTable(cdm = to, name = paste0(nm, "_codelist"), table = attr(x, "cohort_codelist"), overwrite = TRUE)
+      insertTable(cdm = to, name = paste0(nm, "_set"), table = attr(x, "cohort_set"))
+      insertTable(cdm = to, name = paste0(nm, "_attrition"), table = attr(x, "cohort_attrition"))
+      insertTable(cdm = to, name = paste0(nm, "_codelist"), table = attr(x, "cohort_codelist"))
     }
   }
 
@@ -295,8 +294,9 @@ readTable <- function(con, name) {
     dplyr::rename_all(tolower)
 }
 writeTableSrc <- function(src, name, value) {
-  name <- fullNameId(src = src, name = name)
-  writeTable(con = src$con, name = name, value = value)
+  nm <- fullNameId(src = src, name = name)
+  writeTable(con = src$con, name = nm, value = value) |>
+    omopgenerics::newCdmTable(src = src, name = name)
 }
 writeTable <- function(con, name, value) {
   DBI::dbWriteTable(conn = con, name = name, value = value)
