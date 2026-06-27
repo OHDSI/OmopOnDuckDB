@@ -16,9 +16,13 @@ URL: https://OHDSI.github.io/OmopOnDuckDB/
 BugReports: https://github.com/OHDSI/OmopOnDuckDB/issues
 Imports: 
     cli,
+    DBI,
+    dbplyr,
     dplyr,
     duckdb,
     omopgenerics,
-    rlang
+    purrr,
+    rlang,
+    stringr
 Depends: 
     R (>= 3.5)

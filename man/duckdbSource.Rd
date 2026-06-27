@@ -4,7 +4,7 @@
 \alias{duckdbSource}
 \title{Create a `DuckDB` source}
 \usage{
-duckdbSource(con = NULL, writeSchema = NULL, writePrefix = NULL)
+duckdbSource(con = NULL, writeSchema = "main", writePrefix = "")
 }
 \arguments{
 \item{con}{A DuckDB connection or path to a DuckDB database file.}

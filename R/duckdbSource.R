@@ -12,8 +12,8 @@
 #' src <- duckdbSource()
 #'
 duckdbSource <- function(con = NULL,
-                         writeSchema = NULL,
-                         writePrefix = NULL) {
+                         writeSchema = "main",
+                         writePrefix = "") {
   # input validation
   con <- validateCon(con = con)
   writeSchema <- validateSchema(schema = writeSchema, con = con)
@@ -27,7 +27,7 @@ duckdbSource <- function(con = NULL,
   )
 
   # validate source
-  #src <- validateDuckDBSource(src = src)
+  src <- validateDuckDBSource(src = src)
 
   return(src)
 }
@@ -37,7 +37,7 @@ validateCon <- function(con, call = parent.frame()) {
     con <- tempfile(fileext = ".duckdb")
   }
   if (is.character(con)) {
-    omopgenerics::assertCharacter(con, length = 1, msg = msg)
+    omopgenerics::assertCharacter(con, length = 1)
     if (!endsWith(x = con, suffix = ".duckdb")) {
       con <- paste0(con, ".duckdb")
     }
@@ -48,7 +48,7 @@ validateCon <- function(con, call = parent.frame()) {
     }
     con <- duckdb::dbConnect(drv = duckdb::duckdb(dbdir = con))
   }
-  if (!isConnectionWorking(con = con)) {
+  if (isConnectionWorking(con = con)) {
     return(con)
   } else {
     cli::cli_abort(c(x = "`con` ({.cls {class(con)}}) is not a valid {.pkg duckdb} connection."))
@@ -86,11 +86,24 @@ validateDuckDBSource <- function(src) {
   omopgenerics::newCdmSource(src = src, sourceType = "DuckDB")
 }
 schemaExists <- function(con, schema) {
+  dbfile <- getDbName(con = con) |>
+    basename() |>
+    stringr::str_replace(pattern = ".duckdb$", replacement = "")
   dplyr::tbl(con, I("information_schema.schemata")) |>
-    dplyr::filter(.data$schema_name == .env$schema) |>
+    dplyr::filter(
+      .data$catalog_name == .env$dbfile,
+      .data$schema_name == .env$schema
+    ) |>
     dplyr::tally() |>
     dplyr::pull() |>
     as.integer() == 1L
+}
+getDbName <- function(con) {
+  x <- DBI::dbGetInfo(con)$dbname
+  if (x == ":memory:") {
+    x <- "memory"
+  }
+  return(x)
 }
 createSchema <- function(con, schema) {
   DBI::dbExecute(conn = con, statement = paste0("CREATE SCHEMA ", schema, ";"))
@@ -152,15 +165,15 @@ compute.duckdb_cdm <- function(x, name, temporary = FALSE, overwrite = TRUE, ...
   }
 
   sql <- dbplyr::build_sql(createSql, name, " AS ", query, con = src$con)
-  DBI::dbExecute(conn = con, statement = sql)
-  readTable(con = con, name = name)
+  DBI::dbExecute(conn = src$con, statement = sql)
+  readTableSrc(src = src, name = name)
 }
 
 #' @export
 summary.duckdb_cdm <- function(object, ...) {
   list(
     package = "OmopOnDuckDB",
-    databasePath = duckdb::dbGetInfo(object$con)$dbname,
+    databasePath = getDbName(object$con),
     writeSchema = object$writeSchema,
     writePrefix = object$writePrefix
   )
@@ -168,7 +181,7 @@ summary.duckdb_cdm <- function(object, ...) {
 
 #' @importFrom omopgenerics insertTable
 #' @export
-insertTable.duckdb_cdm <- function(cdm, table, name, ...) {
+insertTable.duckdb_cdm <- function(cdm, name, table, ...) {
   if (name %in% listTablesSrc(src = cdm)) {
     dropSourceTable(cdm = cdm, name = name)
   }
@@ -219,7 +232,7 @@ insertCdmTo.duckdb_cdm <- function(cdm , to) {
 dropSourceTable.duckdb_cdm <- function(cdm, name) {
   for (nm in name) {
     statement <- paste0("DROP TABLE IF EXISTS ", fullNameChar(src = cdm, name = name))
-    DBI::dbExecute(conn = con, statement = statement)
+    DBI::dbExecute(conn = cdm$con, statement = statement)
   }
 }
 
@@ -237,7 +250,7 @@ listSourceTables.duckdb_cdm <- function(cdm) {
 
 #' @importFrom omopgenerics cdmDisconnect
 #' @export
-cdmDisconnect.duckdb_cdm <- function(cdm) {
+cdmDisconnect.duckdb_cdm <- function(cdm, ...) {
   duckdb::dbDisconnect(conn = cdm$con)
 }
 
