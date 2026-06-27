@@ -7,11 +7,11 @@
 duckdbSource(con = NULL, writeSchema = NULL, writePrefix = NULL)
 }
 \arguments{
-\item{con}{A DuckDB connection or path to a duckdb file.}
+\item{con}{A DuckDB connection or path to a DuckDB database file.}
 
-\item{writeSchema}{ws}
+\item{writeSchema}{Name of the schema where writable tables are created.}
 
-\item{writePrefix}{wp}
+\item{writePrefix}{Prefix applied to writable table names in `writeSchema`.}
 }
 \value{
 a `DuckDB` source.

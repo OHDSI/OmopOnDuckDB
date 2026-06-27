@@ -1,23 +1,10 @@
 
-#' Title
+#' Create a CDM reference from DuckDB
 #'
 #' @inheritParams conDoc
-#' @param cdmSchema
-#' @param cdmPrefix
-#' @param writeSchema
-#' @param writePrefix
-#' @param achillesSchema
-#' @param achillesPrefix
-#' @param cohortTables
-#' @param otherTables
-#' @param cdmVersion
-#' @param cdmName
-#' @param .softValidation
 #'
-#' @returns
+#' @returns A CDM reference backed by DuckDB.
 #' @export
-#'
-#' @examples
 cdmFromDuckDB <- function(con,
                           cdmSchema = "main",
                           cdmPrefix = "",

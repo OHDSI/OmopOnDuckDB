@@ -2,7 +2,7 @@
 % Please edit documentation in R/cdmFromDuckDB.R
 \name{cdmFromDuckDB}
 \alias{cdmFromDuckDB}
-\title{Title}
+\title{Create a CDM reference from DuckDB}
 \usage{
 cdmFromDuckDB(
   con,
@@ -20,10 +20,39 @@ cdmFromDuckDB(
 )
 }
 \arguments{
-\item{con}{A DuckDB connection or path to a duckdb file.}
+\item{con}{A DuckDB connection or path to a DuckDB database file.}
 
-\item{.softValidation}{}
+\item{cdmSchema}{Name of the schema that contains the OMOP CDM tables.}
+
+\item{cdmPrefix}{Prefix applied to OMOP CDM table names in `cdmSchema`.}
+
+\item{writeSchema}{Name of the schema where writable tables are created.}
+
+\item{writePrefix}{Prefix applied to writable table names in `writeSchema`.}
+
+\item{achillesSchema}{Name of the schema that contains Achilles tables. If
+`NULL`, Achilles tables are not loaded.}
+
+\item{achillesPrefix}{Prefix applied to Achilles table names in
+`achillesSchema`.}
+
+\item{cohortTables}{Character vector of cohort table names to include from
+`writeSchema`.}
+
+\item{otherTables}{Character vector of additional non-CDM table names to
+include from `writeSchema`.}
+
+\item{cdmVersion}{OMOP CDM version.}
+
+\item{cdmName}{Name assigned to the returned CDM reference. If `NULL`, the
+name is read from the `cdm_source` table when available.}
+
+\item{.softValidation}{Logical. If `TRUE`, use soft validation when creating
+CDM and cohort table objects.}
+}
+\value{
+A CDM reference backed by DuckDB.
 }
 \description{
-Title
+Create a CDM reference from DuckDB
 }

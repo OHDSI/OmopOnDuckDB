@@ -2,8 +2,6 @@
 #' Create a `DuckDB` source
 #'
 #' @inheritParams conDoc
-#' @param writeSchema ws
-#' @param writePrefix wp
 #'
 #' @return a `DuckDB` source.
 #' @export
