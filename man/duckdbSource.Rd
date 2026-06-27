@@ -7,7 +7,7 @@
 duckdbSource(con = NULL, writeSchema = NULL, writePrefix = NULL)
 }
 \arguments{
-\item{con}{A DuckDB connection or path to a duckdb file. If NULL a temp connection will be created.}
+\item{con}{A DuckDB connection or path to a duckdb file.}
 
 \item{writeSchema}{ws}
 

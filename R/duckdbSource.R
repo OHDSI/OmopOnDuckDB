@@ -1,7 +1,7 @@
 
 #' Create a `DuckDB` source
 #'
-#' @param con A DuckDB connection or path to a duckdb file. If NULL a temp connection will be created.
+#' @inheritParams conDoc
 #' @param writeSchema ws
 #' @param writePrefix wp
 #'
@@ -18,8 +18,8 @@ duckdbSource <- function(con = NULL,
                          writePrefix = NULL) {
   # input validation
   con <- validateCon(con = con)
-  writeSchema <- validateWriteSchema(writeSchema = writeSchema, con = con)
-  writePrefix <- validateWritePrefix(writePrefix = writePrefix)
+  writeSchema <- validateSchema(schema = writeSchema, con = con)
+  writePrefix <- validatePrefix(prefix = writePrefix)
 
   # create source
   src <- createDuckDBSource(
@@ -56,23 +56,21 @@ validateCon <- function(con, call = parent.frame()) {
     cli::cli_abort(c(x = "`con` ({.cls {class(con)}}) is not a valid {.pkg duckdb} connection."))
   }
 }
-validateWriteSchema <- function(writeSchema, con, call = parent.frame()) {
-  omopgenerics::assertCharacter(writeSchema, length = 1, null = T, call = call)
-  if (is.null(writeSchema)) {
-    writeSchema <- "main"
-    cli::cli_inform(c(i = "Using default `writeSchema` as {.pkg main}."))
+validateSchema <- function(schema, con, call = parent.frame()) {
+  nm <- deparse(substitute(schema))
+  omopgenerics::assertCharacter(schema, length = 1, nm = nm, call = call)
+  if (!schemaExists(con = con, schema = schema)) {
+    cli::cli_inform(c("!" = "`{nm}` ({.pkg {schema}}) does not exist. Trying to create it..."))
+    createSchema(con = con, schema = schema)
+    cli::cli_inform(c("v" = "`{nm}` ({.pkg {schema}}) created."))
   }
-  if (!schemaExists(con = con, schema = writeSchema)) {
-    cli::cli_inform(c("!" = "`writeSchema` ({.pkg {writeSchema}}) does not exist. Trying to create it..."))
-    createSchema(con = con, schema = writeSchema)
-    cli::cli_inform(c("v" = "`writeSchema` ({.pkg {writeSchema}}) created."))
-  }
-  return(writeSchema)
+  return(schema)
 }
-validateWritePrefix <- function(writePrefix, call = parent.frame()) {
-  writePrefix <- writePrefix %||% ""
-  omopgenerics::assertCharacter(writePrefix, length = 1, call = call)
-  return(writePrefix)
+validatePrefix <- function(prefix, call = parent.frame()) {
+  nm <- deparse(substitute(prefix))
+  prefix <- prefix %||% ""
+  omopgenerics::assertCharacter(prefix, length = 1, nm = nm, call = call)
+  return(prefix)
 }
 createDuckDBSource <- function(con,
                                writeSchema,
@@ -132,19 +130,32 @@ tbl.duckdb_cdm <- function(src, schema = NULL, name, ...) {
 compute.duckdb_cdm <- function(x, name, temporary = FALSE, overwrite = TRUE, ...) {
   src <- attr(x, "tbl_source")
 
-  # check if need intermediate
-  if (intermediate) {
-    nm <- omopgenerics::uniqueTableName()
-    x <- x |>
-      dplyr::compute(name = nm)
-    on.exit(omopgenerics::dropSourceTable(cdm = x, name = nm))
-  }
+  # get the query
+  query <- dbplyr::sql_render(query = x, con = src$con)
 
   if (!temporary) {
-    # check if we need to drop old table
+    # prepare name
+    name <- paste0(src$writeSchema, ".", src$writePrefix, name)
+
+    # check if need intermediate table
+    queryCharacter <- as.character(query)
+    if (grepl(pattern = name, x = queryCharacter)) {
+      nm <- omopgenerics::uniqueTableName()
+      x <- x |>
+        dplyr::compute(name = nm)
+      on.exit(omopgenerics::dropSourceTable(cdm = src, name = nm))
+    }
+
+    # create sql
+    createSql <- "CREATE TABLE "
+  } else {
+    # create sql
+    createSql <- "CREATE TEMPORARY TABLE "
   }
 
-
+  sql <- dbplyr::build_sql(createSql, name, " AS ", query, con = src$con)
+  DBI::dbExecute(conn = con, statement = sql)
+  readTable(con = con, name = name)
 }
 
 #' @export
@@ -169,7 +180,40 @@ insertTable.duckdb_cdm <- function(cdm, table, name, ...) {
 #' @importFrom omopgenerics insertCdmTo
 #' @export
 insertCdmTo.duckdb_cdm <- function(cdm , to) {
+  cdm <- omopgenerics::validateCdmArgument(cdm = cdm)
 
+  achillesSchema <- NULL
+  cohorts <- character()
+  other <- character()
+  for (nm in names(cdm)) {
+    x <- dplyr::collect(cdm[[nm]])
+    cl <- class(x)
+    if ("achilles_table" %in% cl) {
+      achilles <- to$writeSchema
+    }
+    if (!any(c("achilles_table", "omop_table", "cohort_table") %in% cl)) {
+      other <- c(other, nm)
+    }
+    insertTable(cdm = to, name = nm, table = x, overwrite = TRUE)
+    if ("cohort_table" %in% cl) {
+      cohorts <- c(cohorts, nm)
+      insertTable(cdm = to, name = paste0(nm, "_set"), table = attr(x, "cohort_set"), overwrite = TRUE)
+      insertTable(cdm = to, name = paste0(nm, "_attrition"), table = attr(x, "cohort_attrition"), overwrite = TRUE)
+      insertTable(cdm = to, name = paste0(nm, "_codelist"), table = attr(x, "cohort_codelist"), overwrite = TRUE)
+    }
+  }
+
+  cdmFromDuckDB(
+    con = to$con,
+    cdmSchema = to$writeSchema,
+    writeSchema = to$writeSchema,
+    cohortTables = cohorts,
+    achillesSchema = achillesSchema,
+    cdmName = omopgenerics::cdmName(cdm),
+    cdmVersion = omopgenerics::cdmVersion(cdm),
+    .softValidation = TRUE
+  ) |>
+    omopgenerics::readSourceTable(name = other)
 }
 
 #' @importFrom omopgenerics dropSourceTable
@@ -246,4 +290,11 @@ writeTableSrc <- function(src, name, value) {
 writeTable <- function(con, name, value) {
   DBI::dbWriteTable(conn = con, name = name, value = value)
   readTable(con = con, name = name)
+}
+reportSchema <- function(schema, prefix) {
+  if (identical(prefix, "")) {
+    schema
+  } else {
+    paste0(schema, ".", prefix)
+  }
 }
