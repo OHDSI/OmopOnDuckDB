@@ -138,34 +138,26 @@ tbl.duckdb_cdm <- function(src, schema = NULL, name, ...) {
 
 #' @importFrom dplyr compute
 #' @export
-compute.duckdb_cdm <- function(x, name, temporary = FALSE, overwrite = TRUE, ...) {
+compute.duckdb_cdm <- function(x, name, temporary, overwrite, ...) {
   src <- attr(x, "tbl_source")
 
-  # get the query
-  query <- as.character(dbplyr::sql_render(query = x, con = src$con))
-
-  if (!temporary) {
-    # prepare name
-    name <- paste0(src$writeSchema, ".", src$writePrefix, name)
-
-    # check if need intermediate table
-    if (grepl(pattern = name, x = query)) {
-      nm <- omopgenerics::uniqueTableName()
-      x <- x |>
-        dplyr::compute(name = nm)
-      on.exit(omopgenerics::dropSourceTable(cdm = src, name = nm))
-    }
-
-    # create sql
-    createSql <- "CREATE TABLE "
-  } else {
-    # create sql
-    createSql <- "CREATE TEMPORARY TABLE "
+  # add intermediate if needed
+  query <- as.character(dbplyr::sql_render(x))
+  intermediate <- !temporary && overwrite &&
+    grepl(paste0("\\Q", fullNameChar(src = src, name = name), "\\E(\\W|$)"), query, perl = TRUE)
+  if (intermediate) {
+    nm <- omopgenerics::uniqueTableName()
+    x <- dplyr::compute(x, name = nm, temporary = FALSE, overwrite = TRUE, ...)
+    on.exit(DBI::dbRemoveTable(src$con, nm))
   }
 
-  sql <- dbplyr::build_sql(paste0(createSql, name, " AS ", query), con = src$con)
-  DBI::dbExecute(conn = src$con, statement = sql)
-  readTableSrc(src = src, name = name)
+  if (!temporary) {
+    dropSourceTable(cdm = src, name = name)
+    name <- fullNameId(src = src, name = name)
+  }
+
+  class(x) <- setdiff(class(x), "duckdb_cdm")
+  dplyr::compute(x, name = name, temporary = temporary, overwrite = overwrite, ...)
 }
 
 #' @export
@@ -230,7 +222,7 @@ insertCdmTo.duckdb_cdm <- function(cdm , to) {
 #' @export
 dropSourceTable.duckdb_cdm <- function(cdm, name) {
   for (nm in name) {
-    statement <- paste0("DROP TABLE IF EXISTS ", fullNameChar(src = cdm, name = name))
+    statement <- paste0("DROP TABLE IF EXISTS ", fullNameChar(src = cdm, name = nm))
     DBI::dbExecute(conn = cdm$con, statement = statement)
   }
 }
