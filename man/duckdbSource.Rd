@@ -4,14 +4,14 @@
 \alias{duckdbSource}
 \title{Create a `DuckDB` source}
 \usage{
-duckdbSource(con = NULL, writeSchema = NULL, writePrefix = NULL)
+duckdbSource(con = NULL, writeSchema = "main", writePrefix = "")
 }
 \arguments{
-\item{con}{A DuckDB connection or path to a duckdb file. If NULL a temp connection will be created.}
+\item{con}{A DuckDB connection or path to a DuckDB database file.}
 
-\item{writeSchema}{ws}
+\item{writeSchema}{Name of the schema where writable tables are created.}
 
-\item{writePrefix}{wp}
+\item{writePrefix}{Prefix applied to writable table names in `writeSchema`.}
 }
 \value{
 a `DuckDB` source.
