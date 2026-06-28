@@ -173,6 +173,7 @@ summary.duckdb_cdm <- function(object, ...) {
 #' @importFrom omopgenerics insertTable
 #' @export
 insertTable.duckdb_cdm <- function(cdm, name, table, ...) {
+  table <- dplyr::as_tibble(table)
   if (name %in% listTablesSrc(src = cdm)) {
     dropSourceTable(cdm = cdm, name = name)
   }
@@ -185,13 +186,15 @@ insertCdmTo.duckdb_cdm <- function(cdm , to) {
   cdm <- omopgenerics::validateCdmArgument(cdm = cdm)
 
   achillesSchema <- NULL
+  achillesPrefix <- ""
   cohorts <- character()
   other <- character()
   for (nm in names(cdm)) {
     x <- dplyr::collect(cdm[[nm]])
     cl <- class(x)
     if ("achilles_table" %in% cl) {
-      achilles <- to$writeSchema
+      achillesSchema <- to$writeSchema
+      achillesPrefix <- to$writePrefix
     }
     if (!any(c("achilles_table", "omop_table", "cohort_table") %in% cl)) {
       other <- c(other, nm)
@@ -208,9 +211,12 @@ insertCdmTo.duckdb_cdm <- function(cdm , to) {
   cdmFromDuckDB(
     con = to$con,
     cdmSchema = to$writeSchema,
+    cdmPrefix = to$writePrefix,
     writeSchema = to$writeSchema,
+    writePrefix = to$writePrefix,
     cohortTables = cohorts,
     achillesSchema = achillesSchema,
+    achillesPrefix = achillesPrefix,
     cdmName = omopgenerics::cdmName(cdm),
     cdmVersion = omopgenerics::cdmVersion(cdm),
     .softValidation = TRUE

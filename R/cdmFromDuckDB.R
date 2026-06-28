@@ -54,7 +54,7 @@ cdmFromDuckDB <- function(con,
   # find cdm name
   if (is.null(cdmName)) {
     if ("cdm_source" %in% names(cdmTables)) {
-      if (!omopgenerics::isTableEmpty(cdm$cdm_source)) {
+      if (!omopgenerics::isTableEmpty(cdmTables$cdm_source)) {
         candidate <- cdmTables$cdm_source |>
           dplyr::pull("cdm_source_name")
         if (length(candidate) == 1 & is.character(candidate)) {
@@ -118,7 +118,8 @@ cdmFromDuckDB <- function(con,
     }
     for (ach in achs) {
       cdm[[ach]] <- readTable(con = con, name = fullNameId(src = achSrc, name = ach)) |>
-        omopgenerics::newCdmTable(src = src, name = ach)
+        omopgenerics::newCdmTable(src = src, name = ach) |>
+        omopgenerics::newAchillesTable()
     }
   }
 
